@@ -1,5 +1,5 @@
 import socket, serial, time, datetime, threading, os
-from digi.xbee.devices import XBeeDevice
+from digi.xbee.devices import XBeeDevice,RemoteXBeeDevice,XBee64BitAddress
 
 #Buffer values based off QGroundControl git in src/comm/UDPLink.cc 1.298-299
 KiB = 1024
@@ -9,10 +9,6 @@ BUFFER_LIMIT = 4095
 UDP_PORT = 14555
 UDP_IP = '127.0.0.1'
 
-KNOWN_64BIT_ADDRS = {
-    0x0013A20040D68C2E: ('GCS', None),
-    0x0013A20040D68C32: ('Worker #1', 14556),
-}
 
 SCRIPT_START = time.time()
 
@@ -21,6 +17,11 @@ HEADER_LEN = 6
 LEN_BYTE = 1
 CRC_LEN = 2
 START_BYTE = 0xfe
+
+#Drone IDS
+DRONE_ID = "0013A200419B5AD8"
+BAUD_RATE = 230400
+PORT = '/dev/ttyUSB1'
 
 class XBeeToUDP(XBeeDevice):
     def __init__(self,serial_port = '/dev/ttyUSB1',baud_rate = 230400, udp=('127.0.0.1',14555),**kwargs):
@@ -32,29 +33,37 @@ class XBeeToUDP(XBeeDevice):
         self.udp_ip, self.udp_port = udp
         self.udp_connections = {} # Port: (b'\xfe\x42... queue_in, queue_out)
         self.sockets = {}
-        self.queued_data = None
+        self.mavlink_queue = []
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.connect((self.udp_ip, self.udp_port))
+        udp_rx = threading.Thread(target=self.udp_rx_thread,daemon=True)
+        udp_rx.start()
         
 
     def start(self): 
         self.open()
         # handle_data deals with the incoming of XBee data
         self.add_data_received_callback(self.handle_data)
+        self.drone = RemoteXBeeDevice(self,XBee64BitAddress.from_hex_string(DRONE_ID))
         time.sleep(0.1)
         
     def handle_data(self,xbee_message):
         indata = bytes(xbee_message.data)
-        #key = xbee_message.remote_device.get_64bit_addr()
-        
-        self.queued_data = b'' + indata
         try:
-            sent = self.sock.send(self.queued_data)
-            self.queued_data = self.queued_data[sent:]
+            sent = self.sock.send(indata)
         except Exception as e:
-            print("pass")   
-        print(self.queued_data)   
+            pass
         
+    
+    def udp_rx_thread(self):
+
+        while True:
+            try:
+                outdata,_ = self.sock.recvfrom(KiB)
+                self.send_data(self.drone,outdata)
+            except Exception as e:
+                pass
+
 
 if __name__ == '__main__':
     xbee = XBeeToUDP('/dev/ttyUSB1',230400)

@@ -1,5 +1,5 @@
 from digi.xbee.devices import XBeeDevice
-PORT = '/dev/ttyUSB1'
+PORT = '/dev/ttyUSB0'
 BAUD_RATE = 230400
 
 device = XBeeDevice(PORT, BAUD_RATE)
