@@ -11,7 +11,7 @@ sched = BackgroundScheduler()
 
 
 PORT = '/dev/ttyUSB0'
-BAUD_RATE = 9600
+BAUD_RATE = 230400
 DRONE_ID = "0013A200419B5208"
 DATA_TO_SEND = "Hello World:"
 

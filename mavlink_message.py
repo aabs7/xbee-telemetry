@@ -15,7 +15,7 @@ from pymavlink import mavutil
 #  If you want to use QGroundControl in parallel with your python script,
 #  it's possible to add a new output port in http:192.168.2.2:2770/mavproxy as a new line.
 #  E.g: --out udpbcast:192.168.2.255:yourport
-master = mavutil.mavlink_connection('tcp:127.0.0.1:5762')
+master = mavutil.mavlink_connection("/dev/ttyACM0", baud=115200)
 count = 0
 # Get some information !
 while True:
