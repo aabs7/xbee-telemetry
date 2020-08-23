@@ -1,0 +1,2 @@
+2020-08-23 18:51:49,262 : INFO :: XBeeSerialPort '/dev/ttyUSB1' port opened
+2020-08-23 18:51:49,468 : INFO :: {'context': 'UDP_CONN', 'msg': 'Initialized UDP port at 127.0.0.1:14555 for drone ID:0013A200419B5AD8'}
